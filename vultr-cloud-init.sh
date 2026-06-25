@@ -31,16 +31,25 @@ services:
       - mssql_data:/var/opt/mssql
 
   backend:
-    image: fru0/vibe-chat-app:latest
+    image: fru0/vibe-chat-api:latest
     container_name: csharp_backend
     restart: always
-    ports:
-      - "80:8080"
+    expose:
+      - "8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=database;Database=DemoDb;User Id=sa;Password=YourStrong@CloudPassword123!;TrustServerCertificate=True;
     depends_on:
       - database
+
+  frontend:
+    image: fru0/vibe-chat-frontend:latest
+    container_name: angular_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 
   adminer:
     image: adminer:latest
@@ -59,7 +68,7 @@ services:
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 300 --cleanup csharp_backend
+    command: --interval 300 --cleanup csharp_backend angular_frontend
 
 volumes:
   mssql_data:

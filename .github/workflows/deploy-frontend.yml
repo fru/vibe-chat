@@ -1,8 +1,11 @@
-name: Build and Push to Docker Hub
+name: Deploy Frontend
 
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/deploy-frontend.yml"
 
 jobs:
   build-and-push:
@@ -23,9 +26,9 @@ jobs:
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v7
       with:
-        context: ./backend
-        file: ./backend/Dockerfile
+        context: ./frontend
+        file: ./frontend/Dockerfile
         push: true
         tags: |
-          fru0/vibe-chat-app:latest
-          fru0/vibe-chat-app:1.0.${{ github.run_number }}
+          fru0/vibe-chat-frontend:latest
+          fru0/vibe-chat-frontend:1.0.${{ github.run_number }}
