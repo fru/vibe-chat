@@ -28,6 +28,10 @@ workflows:
         working_directory: frontend
         script: |
           npx cap sync android
+      - name: Ensure gradlew is executable
+        working_directory: frontend/android
+        script: |
+          chmod +x ./gradlew
       - name: Build Android debug APK
         working_directory: frontend/android
         script: |
