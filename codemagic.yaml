@@ -32,6 +32,10 @@ workflows:
         working_directory: frontend/android
         script: |
           chmod +x ./gradlew
+      - name: Set Java 21 for Capacitor 8
+        script: |
+          jenv local 21
+          java -version
       - name: Build Android debug APK
         working_directory: frontend/android
         script: |
