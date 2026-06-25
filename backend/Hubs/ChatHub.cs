@@ -14,7 +14,7 @@ public class ChatHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        var userId = Context.GetHttpContext?.Request.Query["userId"];
+        var userId = Context.GetHttpContext()?.Request.Query["userId"];
         if (!string.IsNullOrEmpty(userId))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"User_{userId}");

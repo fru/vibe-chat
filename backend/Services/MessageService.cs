@@ -1,5 +1,6 @@
 using App.Data;
 using App.Data.Entities;
+using App.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

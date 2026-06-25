@@ -1,0 +1,65 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/chat" icon="arrowBack" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-avatar slot="start" class="peer-avatar">
+      <div class="avatar-letter">JD</div>
+    </ion-avatar>
+    <ion-title>
+      <div class="peer-title">
+        <span class="peer-name">John Doe</span>
+        <span class="peer-status">online</span>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button aria-label="Menu">
+        <ion-icon slot="icon-only" name="ellipsisVertical"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="chat-content">
+  <div class="message-list">
+    @for (msg of messages(); track msg.id) {
+      <div class="bubble-row" [class.mine]="msg.fromMe">
+        <div class="bubble">
+          <p class="bubble-text">{{ msg.text }}</p>
+          <span class="bubble-meta">
+            {{ msg.timestamp }}
+            @if (msg.fromMe) {
+              <ion-icon
+                class="tick-icon"
+                [name]="msg.status === 'read' ? 'checkmarkDone' : msg.status === 'delivered' ? 'checkmarkDone' : 'checkmark'"
+                [class.read]="msg.status === 'read'"
+              ></ion-icon>
+            }
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+</ion-content>
+
+<ion-footer class="ion-no-border">
+  <ion-toolbar class="input-toolbar">
+    <ion-buttons slot="start">
+      <ion-button aria-label="Attach">
+        <ion-icon slot="icon-only" name="attach"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-input
+      class="message-input"
+      placeholder="Message"
+      [ngModel]="draft()"
+      (ngModelChange)="draft.set($event)"
+      (keyup.enter)="send()"
+    ></ion-input>
+    <ion-buttons slot="end">
+      <ion-button (click)="send()" aria-label="Send" class="send-btn">
+        <ion-icon slot="icon-only" name="send"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>
