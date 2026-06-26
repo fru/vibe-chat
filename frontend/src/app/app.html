@@ -15,16 +15,7 @@
   </mat-sidenav>
 
   <mat-sidenav-content class="app-content">
-    <mat-toolbar color="primary" class="app-toolbar">
-      <button mat-icon-button aria-label="Back" (click)="goBack()">
-        <mat-icon>arrow_back</mat-icon>
-      </button>
-      <span>{{ title() }}</span>
-      <span class="app-toolbar-spacer"></span>
-      <button mat-icon-button aria-label="Search">
-        <mat-icon>search</mat-icon>
-      </button>
-    </mat-toolbar>
+    <view-toolbar />
     <div class="app-outlet">
       <router-outlet />
     </div>

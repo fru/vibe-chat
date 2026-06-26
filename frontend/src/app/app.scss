@@ -2,10 +2,15 @@
   height: 100vh;
 }
 
-.app-outlet {
-  margin: 10px;
+.app-content, .app-outlet {
+  display: flex;
+  flex-direction: column;
 }
 
-.app-toolbar-spacer {
-  flex: 1 1 auto;
+.app-outlet {
+  margin: 10px;
+  flex: 1;
+  min-height: 0;
 }
+
+

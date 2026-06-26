@@ -1,4 +1,9 @@
-import { Component, signal } from '@angular/core';
+import {
+  Component,
+  effect,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ViewChat } from '../view-chat/view-chat';
 import { ViewChatBubble } from '../view-chat/view-chat-bubble';
 import { ViewChatInput } from '../view-chat/view-chat-input';
@@ -14,7 +19,7 @@ interface ChatMessage {
   selector: 'page-chat',
   imports: [ViewChat, ViewChatBubble, ViewChatInput],
   template: `
-    <view-chat chatName="Chat">
+    <view-chat chatName="Chat" #chat>
       @for (message of messages(); track message.id) {
         <view-chat-bubble
           [content]="message.content"
@@ -29,8 +34,20 @@ interface ChatMessage {
       />
     </view-chat>
   `,
+  styles: [
+    `
+      :host {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+    `,
+  ],
 })
 export class PageChatComponent {
+  private readonly chat = viewChild(ViewChat);
+
   protected readonly messages = signal<ChatMessage[]>([
     {
       id: 1,
@@ -53,6 +70,13 @@ export class PageChatComponent {
   ]);
 
   protected readonly draft = signal('');
+
+  constructor() {
+    effect(() => {
+      this.messages();
+      queueMicrotask(() => this.chat()?.scrollToBottom());
+    });
+  }
 
   protected send(): void {
     const text = this.draft().trim();

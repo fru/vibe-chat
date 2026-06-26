@@ -1,4 +1,9 @@
-import { Component, input } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  ViewChild,
+  input,
+} from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 
 @Component({
@@ -9,7 +14,7 @@ import { MatCardModule } from '@angular/material/card';
       <div class="chat-header">
         <span class="chat-name">{{ chatName() }}</span>
       </div>
-      <div class="messages-list">
+      <div class="messages-list" #messagesList>
         <ng-content />
       </div>
       <ng-content select="[view-chat-input]" />
@@ -17,11 +22,18 @@ import { MatCardModule } from '@angular/material/card';
   `,
   styles: [
     `
+      :host {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+
       .chat-card {
         display: flex;
         flex-direction: column;
-        height: 100%;
-        max-height: 70vh;
+        flex: 1 1 auto;
+        min-height: 0;
         padding: 0;
         overflow: hidden;
       }
@@ -41,6 +53,7 @@ import { MatCardModule } from '@angular/material/card';
 
       .messages-list {
         flex: 1 1 auto;
+        min-height: 0;
         overflow-y: auto;
         padding: 16px 12px;
         display: flex;
@@ -53,4 +66,14 @@ import { MatCardModule } from '@angular/material/card';
 })
 export class ViewChat {
   readonly chatName = input<string>('Chat');
+
+  @ViewChild('messagesList')
+  private messagesList?: ElementRef<HTMLElement>;
+
+  scrollToBottom(): void {
+    const el = this.messagesList?.nativeElement;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }
 }
