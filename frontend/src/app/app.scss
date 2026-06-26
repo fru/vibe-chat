@@ -1,0 +1,51 @@
+.app-container {
+  height: 100vh;
+}
+
+.app-sidenav {
+  width: 260px;
+  border-right: none;
+}
+
+.app-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.app-outlet {
+  flex: 1;
+  overflow: auto;
+  margin: 10px;
+}
+
+.app-expansion {
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.app-expansion-icon {
+  margin-right: 16px;
+}
+
+.app-expansion-title {
+  font-weight: 500;
+}
+
+.app-sub-item {
+  padding-left: 24px;
+}
+
+.app-menu-item-active {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--primary);
+}
+
+.app-toolbar-spacer {
+  flex: 1 1 auto;
+}
