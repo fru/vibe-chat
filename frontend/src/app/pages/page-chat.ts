@@ -1,25 +1,33 @@
 import {
   Component,
   effect,
+  inject,
   signal,
   viewChild,
 } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ViewChat } from '../view-chat/view-chat';
 import { ViewChatBubble } from '../view-chat/view-chat-bubble';
 import { ViewChatInput } from '../view-chat/view-chat-input';
+import {
+  ChatApiService,
+  type ChatMessageDto,
+} from '../services/chat-api';
 
 interface ChatMessage {
-  id: number;
+  id: string;
   content: string;
   timestamp: Date;
   outgoing: boolean;
+  pending: boolean;
 }
 
 @Component({
   selector: 'page-chat',
   imports: [ViewChat, ViewChatBubble, ViewChatInput],
   template: `
-    <view-chat chatName="Chat" #chat>
+    <view-chat [chatName]="room()" #chat>
       @for (message of messages(); track message.id) {
         <view-chat-bubble
           [content]="message.content"
@@ -47,34 +55,81 @@ interface ChatMessage {
 })
 export class PageChatComponent {
   private readonly chat = viewChild(ViewChat);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly api = inject(ChatApiService);
+  private readonly snackBar = inject(MatSnackBar);
 
-  protected readonly messages = signal<ChatMessage[]>([
-    {
-      id: 1,
-      content: 'Hey! Are we still on for today?',
-      timestamp: new Date(Date.now() - 1000 * 60 * 42),
-      outgoing: false,
-    },
-    {
-      id: 2,
-      content: 'Yes, see you in a bit.',
-      timestamp: new Date(Date.now() - 1000 * 60 * 40),
-      outgoing: true,
-    },
-    {
-      id: 3,
-      content: 'Great, bringing the snacks 🍿',
-      timestamp: new Date(Date.now() - 1000 * 60 * 38),
-      outgoing: false,
-    },
-  ]);
+  protected readonly room = signal('common');
+  protected readonly user = signal('A');
 
+  protected readonly messages = signal<ChatMessage[]>([]);
   protected readonly draft = signal('');
 
   constructor() {
+    // Ensure default query params (room, user) are present in the URL.
+    const snapshot = this.route.snapshot.queryParams;
+    const room = snapshot['room'] ?? 'common';
+    const user = snapshot['user'] ?? 'A';
+    const queryParams: Record<string, string> = { ...snapshot };
+    let needsUpdate = false;
+    if (!snapshot['room']) {
+      queryParams['room'] = 'common';
+      needsUpdate = true;
+    }
+    if (!snapshot['user']) {
+      queryParams['user'] = 'A';
+      needsUpdate = true;
+    }
+    this.room.set(room);
+    this.user.set(user);
+    if (needsUpdate) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams,
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
+
+    // React to room/user changes from the URL.
+    this.route.queryParams.subscribe((params) => {
+      const newRoom = params['room'] ?? 'common';
+      const newUser = params['user'] ?? 'A';
+      const changed =
+        newRoom !== this.room() || newUser !== this.user();
+      this.room.set(newRoom);
+      this.user.set(newUser);
+      if (changed) {
+        this.loadMessages();
+      }
+    });
+
+    // Initial load.
+    this.loadMessages();
+
     effect(() => {
       this.messages();
       queueMicrotask(() => this.chat()?.scrollToBottom());
+    });
+  }
+
+  private loadMessages(): void {
+    const room = this.room();
+    const currentUser = this.user();
+    this.api.getMessages(room).subscribe({
+      next: (dtos) => {
+        this.messages.set(
+          dtos.map((dto) => this.toChatMessage(dto, currentUser)),
+        );
+      },
+      error: () => {
+        this.snackBar.open(
+          'Failed to load messages',
+          'Dismiss',
+          { duration: 4000 },
+        );
+      },
     });
   }
 
@@ -83,12 +138,53 @@ export class PageChatComponent {
     if (!text) {
       return;
     }
-    const nextId = (this.messages().at(-1)?.id ?? 0) + 1;
-    this.messages.update((list) => [
-      ...list,
-      { id: nextId, content: text, timestamp: new Date(), outgoing: true },
-    ]);
+
+    const id = crypto.randomUUID();
+    const optimisticMessage: ChatMessage = {
+      id,
+      content: text,
+      timestamp: new Date(),
+      outgoing: true,
+      pending: true,
+    };
+
+    this.messages.update((list) => [...list, optimisticMessage]);
     this.draft.set('');
+
+    const room = this.room();
+    const user = this.user();
+
+    this.api.sendMessage(room, { username: user, content: text }).subscribe({
+      next: (dto) => {
+        this.messages.update((list) =>
+          list.map((m) =>
+            m.id === id
+              ? this.toChatMessage(dto, user)
+              : m,
+          ),
+        );
+      },
+      error: () => {
+        // Remove the optimistic message and restore the content to the input.
+        this.messages.update((list) => list.filter((m) => m.id !== id));
+        this.draft.set(text);
+        this.snackBar.open(
+          'Message failed to send',
+          'Dismiss',
+          { duration: 4000 },
+        );
+      },
+    });
+  }
+
+  private toChatMessage(dto: ChatMessageDto, currentUser: string): ChatMessage {
+    return {
+      id: dto.id,
+      content: dto.content,
+      timestamp: new Date(dto.timestamp),
+      outgoing: dto.username === currentUser,
+      pending: false,
+    };
   }
 
   protected formatTime(date: Date): string {

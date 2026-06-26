@@ -1,4 +1,5 @@
 using App.Data;
+using App.Data.Entities;
 using App.Services;
 
 namespace App.Extensions;
@@ -24,20 +25,22 @@ public static class EndpointExtensions
             }
         });
 
-        app.MapPost("/api/messages", async (IMessageService messageService, SendMessageRequest request) =>
+        // GET chat messages for a room (called when first visiting the chat component)
+        app.MapGet("/api/rooms/{room}/messages", async (IMessageService messageService, string room) =>
         {
-            await messageService.SendMessageAsync(request.SenderId, request.ReceiverId, request.Content);
-            return Results.Ok(new { status = "Sent" });
+            var messages = await messageService.GetMessagesAsync(room);
+            return Results.Ok(messages);
         });
 
-        app.MapPost("/api/messages/{id:int}/read", async (IMessageService messageService, int id) =>
+        // POST a new chat message to a room
+        app.MapPost("/api/rooms/{room}/messages", async (IMessageService messageService, string room, SendMessageRequest request) =>
         {
-            await messageService.MarkReadAsync(id);
-            return Results.Ok();
+            var message = await messageService.SendMessageAsync(room, request.Username, request.Content);
+            return Results.Created($"/api/rooms/{room}/messages/{message.Id}", message);
         });
 
         return app;
     }
 }
 
-public record SendMessageRequest(int SenderId, int ReceiverId, string Content);
+public record SendMessageRequest(string Username, string Content);

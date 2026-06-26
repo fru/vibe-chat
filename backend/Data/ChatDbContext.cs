@@ -7,38 +7,66 @@ public class ChatDbContext : DbContext
 {
     public ChatDbContext(DbContextOptions<ChatDbContext> options) : base(options) { }
 
-    public DbSet<User> Users => Set<User>();
-    public DbSet<Message> Messages => Set<Message>();
-    public DbSet<PushNotificationLog> PushNotificationLogs => Set<PushNotificationLog>();
+    public DbSet<ChatRoom> ChatRooms => Set<ChatRoom>();
+    public DbSet<ChatRoomUser> ChatRoomUsers => Set<ChatRoomUser>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<ChatMessageNotified> ChatMessageNotified => Set<ChatMessageNotified>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>(entity =>
+        modelBuilder.Entity<ChatRoom>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.RoomName).HasMaxLength(100).IsRequired();
+            entity.HasIndex(r => r.RoomName).IsUnique();
+        });
+
+        modelBuilder.Entity<ChatRoomUser>(entity =>
         {
             entity.HasKey(u => u.Id);
             entity.Property(u => u.Username).HasMaxLength(50).IsRequired();
+            entity.HasOne(u => u.Room)
+                .WithMany(r => r.Users)
+                .HasForeignKey(u => u.RoomId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(u => new { u.RoomId, u.Username }).IsUnique();
         });
 
-        modelBuilder.Entity<Message>(entity =>
+        modelBuilder.Entity<ChatMessage>(entity =>
         {
             entity.HasKey(m => m.Id);
-            entity.HasOne(m => m.Sender)
-                .WithMany(u => u.SentMessages)
-                .HasForeignKey(m => m.SenderId)
-                .OnDelete(DeleteBehavior.Restrict);
-            entity.HasOne(m => m.Receiver)
-                .WithMany(u => u.ReceivedMessages)
-                .HasForeignKey(m => m.ReceiverId)
-                .OnDelete(DeleteBehavior.Restrict);
-            entity.Property(m => m.Content).IsRequired();
+            entity.HasOne(m => m.Room)
+                .WithMany(r => r.Messages)
+                .HasForeignKey(m => m.RoomId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(m => m.Username).HasMaxLength(50).IsRequired();
+            entity.Property(m => m.Content).HasMaxLength(int.MaxValue).IsRequired();
             entity.Property(m => m.Timestamp).HasDefaultValueSql("GETUTCDATE()");
-            entity.HasIndex(m => new { m.IsDelivered, m.PushSent, m.Timestamp })
-                .HasDatabaseName("IX_Messages_DeliveryStatus");
+            entity.HasIndex(m => new { m.RoomId, m.Timestamp });
         });
 
-        modelBuilder.Entity<PushNotificationLog>(entity =>
+        modelBuilder.Entity<ChatMessageNotified>(entity =>
         {
-            entity.HasKey(p => p.UserId);
+            entity.HasKey(n => n.Id);
+            entity.HasOne(n => n.Message)
+                .WithMany(m => m.Notifications)
+                .HasForeignKey(n => n.MessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(n => n.User)
+                .WithMany(u => u.Notifications)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(n => n.Method).HasConversion<string>().HasMaxLength(20).IsRequired(false);
         });
+
+        // Seed: "common" room with demo users A..E
+        modelBuilder.Entity<ChatRoom>().HasData(new ChatRoom { Id = 1, RoomName = "common" });
+        modelBuilder.Entity<ChatRoomUser>().HasData(
+            new ChatRoomUser { Id = 1, RoomId = 1, Username = "A" },
+            new ChatRoomUser { Id = 2, RoomId = 1, Username = "B" },
+            new ChatRoomUser { Id = 3, RoomId = 1, Username = "C" },
+            new ChatRoomUser { Id = 4, RoomId = 1, Username = "D" },
+            new ChatRoomUser { Id = 5, RoomId = 1, Username = "E" }
+        );
     }
 }

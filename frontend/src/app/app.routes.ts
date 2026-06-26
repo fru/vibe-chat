@@ -4,20 +4,20 @@ import { PageRoomsComponent } from './pages/page-rooms';
 import { PageWorkflowComponent } from './pages/page-workflow';
 
 export const routes: Routes = [
-  { 
-    path: 'messages', 
-    component: PageChatComponent, 
-    title: 'Nachrichten'
+  {
+    path: 'messages',
+    component: PageChatComponent,
+    title: 'Nachrichten',
   },
   {
     path: 'filter/rooms',
     component: PageRoomsComponent,
-    title: 'Zimmer'
+    title: 'Zimmer',
   },
   {
     path: 'filter/workflow',
     component: PageWorkflowComponent,
-    title: 'Arbeitsablauf'
+    title: 'Arbeitsablauf',
   },
   { path: '**', redirectTo: 'messages' },
 ];

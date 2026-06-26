@@ -5,12 +5,13 @@ namespace App.Hubs;
 
 public class ChatHub : Hub
 {
-    private readonly IDeliveryTracker _deliveryTracker;
-
-    public ChatHub(IDeliveryTracker deliveryTracker)
-    {
-        _deliveryTracker = deliveryTracker;
-    }
+    // Notification logic disabled while synchronise logic is being built.
+    // private readonly IDeliveryTracker _deliveryTracker;
+    //
+    // public ChatHub(IDeliveryTracker deliveryTracker)
+    // {
+    //     _deliveryTracker = deliveryTracker;
+    // }
 
     public override async Task OnConnectedAsync()
     {
@@ -22,9 +23,9 @@ public class ChatHub : Hub
         await base.OnConnectedAsync();
     }
 
-    public async Task AcknowledgeReceipt(int messageId)
-    {
-        _deliveryTracker.Complete(messageId);
-        await Clients.Caller.SendAsync("AckReceived", messageId);
-    }
+    // public async Task AcknowledgeReceipt(int messageId)
+    // {
+    //     _deliveryTracker.Complete(messageId);
+    //     await Clients.Caller.SendAsync("AckReceived", messageId);
+    // }
 }

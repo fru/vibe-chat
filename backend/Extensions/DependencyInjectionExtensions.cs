@@ -1,4 +1,3 @@
-using App.BackgroundServices;
 using App.Data;
 using App.Hubs;
 using App.Services;
@@ -17,16 +16,17 @@ public static class DependencyInjectionExtensions
 
         services.AddSignalR();
 
-        services.AddHttpClient<IOneSignalClient, OneSignalClient>(client =>
-        {
-            client.BaseAddress = new Uri("https://api.onesignal.com/");
-        });
+        // --- Notification logic disabled while synchronise logic is being built ---
+        // services.AddHttpClient<IOneSignalClient, OneSignalClient>(client =>
+        // {
+        //     client.BaseAddress = new Uri("https://api.onesignal.com/");
+        // });
 
-        services.AddSingleton<IDeliveryTracker, DeliveryTracker>();
+        // services.AddSingleton<IDeliveryTracker, DeliveryTracker>();
         services.AddScoped<IMessageService, MessageService>();
 
-        services.AddHostedService<BootRecoveryService>();
-        services.AddHostedService<NotificationSweeper>();
+        // services.AddHostedService<BootRecoveryService>();
+        // services.AddHostedService<NotificationSweeper>();
 
         return services;
     }
@@ -41,8 +41,8 @@ public static class DependencyInjectionExtensions
         {
             try
             {
-                dbContext.Database.EnsureCreated();
-                Console.WriteLine("Database initialization succeeded.");
+                await dbContext.Database.MigrateAsync();
+                Console.WriteLine("Database migration succeeded.");
                 return;
             }
             catch (Exception ex)
