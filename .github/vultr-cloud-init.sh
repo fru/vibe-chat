@@ -6,7 +6,7 @@
 # Marketplace App: Docker
 # Add this script under cloud init
 
-# Cloudflare add ip to dns type A with name vibe-chat-app
+# Cloudflare add ip to dns type A with name vibezen
 # Database: http://95.179.161.146:8080/?mssql=database&username=sa&db=DemoDb
 
 # 1. Create the workspace directory
@@ -31,7 +31,7 @@ services:
       - mssql_data:/var/opt/mssql
 
   backend:
-    image: fru0/vibe-chat-api:latest
+    image: fru0/vibezen-api:latest
     container_name: csharp_backend
     restart: always
     expose:
@@ -43,7 +43,7 @@ services:
       - database
 
   frontend:
-    image: fru0/vibe-chat-frontend:latest
+    image: fru0/vibezen-frontend:latest
     container_name: angular_frontend
     restart: always
     ports:
