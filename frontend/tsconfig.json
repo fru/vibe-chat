@@ -13,6 +13,7 @@
     "target": "ES2022",
     "module": "preserve",
     "outDir": "./out-tsc/app",
+    "rootDir": "./src",
     "types": []
   },
   "angularCompilerOptions": {
