@@ -53,6 +53,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapHub<ChatSignalRHub>("/chathub");
+app.MapHub<ChatSignalRHub>("/api/chathub");
 
 app.Run();

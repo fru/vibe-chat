@@ -40,7 +40,7 @@ export class ChatHubService {
     // don't trigger unnecessary change detection.
     this.ngZone.runOutsideAngular(() => {
       this.connection = new HubConnectionBuilder()
-        .withUrl(`/chathub?userId=${encodeURIComponent(userId)}`)
+        .withUrl(`/api/chathub?userId=${encodeURIComponent(userId)}`)
         .withAutomaticReconnect()
         .build();
 
