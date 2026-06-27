@@ -1,5 +1,4 @@
 using App.Data;
-using App.Hubs;
 using App.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,18 +14,7 @@ public static class DependencyInjectionExtensions
             options.UseSqlServer(connectionString));
 
         services.AddSignalR();
-
-        // --- Notification logic disabled while synchronise logic is being built ---
-        // services.AddHttpClient<IOneSignalClient, OneSignalClient>(client =>
-        // {
-        //     client.BaseAddress = new Uri("https://api.onesignal.com/");
-        // });
-
-        // services.AddSingleton<IDeliveryTracker, DeliveryTracker>();
-        services.AddScoped<IMessageService, MessageService>();
-
-        // services.AddHostedService<BootRecoveryService>();
-        // services.AddHostedService<NotificationSweeper>();
+        services.AddScoped<MessageService>();
 
         return services;
     }

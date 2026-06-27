@@ -1,13 +1,13 @@
 using App.Services;
 using Microsoft.AspNetCore.SignalR;
 
-namespace App.Hubs;
+namespace App;
 
-public class ChatHub : Hub
+public class ChatSignalRHub : Hub
 {
-    private readonly IMessageService _messageService;
+    private readonly MessageService _messageService;
 
-    public ChatHub(IMessageService messageService)
+    public ChatSignalRHub(MessageService messageService)
     {
         _messageService = messageService;
     }
@@ -46,7 +46,7 @@ public class ChatHub : Hub
     /// Broadcasts counts to a user from outside the hub (e.g. after a message is posted
     /// or a room is marked as read).
     /// </summary>
-    public static async Task NotifyUserCountsAsync(IHubContext<ChatHub> hubContext, IMessageService messageService, string userId)
+    public static async Task NotifyUserCountsAsync(IHubContext<ChatSignalRHub> hubContext, MessageService messageService, string userId)
     {
         var counts = await messageService.GetUnreadCountsForUserAsync(userId);
         await hubContext.Clients.Group($"User_{userId}")

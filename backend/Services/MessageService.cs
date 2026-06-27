@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace App.Services;
 
-public class MessageService : IMessageService
+public class MessageService
 {
     private readonly ChatDbContext _db;
 
