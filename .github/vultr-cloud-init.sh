@@ -7,12 +7,18 @@
 # Add this script under cloud init
 
 # Cloudflare add ip to dns type A with name vibezen
-# Database: https://vibezen.rueberg.eu/db/ first-launch setup:
-# - Set admin password on first launch
+# Database UI: https://vibezen.rueberg.eu/db/
+# - Login: admin / admin (change password after first login)
 # - Add a connection: Host: database Port: 1433 Database: DemoDb User: sa Password: (see below)
 
 # 1. Install host nginx (reverse proxy that never restarts during deploys)
 apt-get update && apt-get install -y nginx
+
+# Open ports in UFW (Docker bypasses UFW via iptables, but host nginx does not)
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
 
 # 2. Write host nginx config - single entry point on port 80
 # Proxies to containers by host port. Host nginx stays up during container restarts.
@@ -48,9 +54,10 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Proxy CloudBeaver (web-based DB management UI)
+    # Proxy SQLPad (web-based DB management UI)
+    # No trailing slash on proxy_pass — preserves the /db/ prefix for SQLPad's SQLPAD_BASE_URL
     location /db/ {
-        proxy_pass http://127.0.0.1:8083/;
+        proxy_pass http://127.0.0.1:8083;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -125,20 +132,26 @@ services:
       - "8082:8080"
     command: --interval 300 --cleanup --http-api-update
 
-  cloudbeaver:
-    image: dbeaver/cloudbeaver:latest
-    container_name: cloudbeaver
+  sqlpad:
+    image: sqlpad/sqlpad:latest
+    container_name: sqlpad
     restart: always
     ports:
-      - "8083:8978"
+      - "8083:3000"
+    environment:
+      - SQLPAD_BASE_URL=/db
+      - SQLPAD_ADMIN=admin
+      - SQLPAD_ADMIN_PASSWORD=YourStrong@SqlpadPassword123!
+      - SQLPAD_APP_LOG_LEVEL=info
+      - SQLPAD_WEB_LOG_LEVEL=warn
     volumes:
-      - cloudbeaver_data:/opt/cloudbeaver/workspace
+      - sqlpad_data:/var/lib/sqlpad
     depends_on:
       - database
 
 volumes:
   mssql_data:
-  cloudbeaver_data:
+  sqlpad_data:
 EOF
 
 # 5. Launch the containers
