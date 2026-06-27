@@ -25,14 +25,6 @@ public class ChatSignalRHub : Hub
     }
 
     /// <summary>
-    /// Client can request a fresh count snapshot at any time.
-    /// </summary>
-    public async Task RequestCounts(string userId)
-    {
-        await SendCountsToUserAsync(userId);
-    }
-
-    /// <summary>
     /// Broadcasts the current per-room unread counts to a single user.
     /// </summary>
     public async Task SendCountsToUserAsync(string userId)

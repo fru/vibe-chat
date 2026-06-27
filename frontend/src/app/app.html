@@ -1,11 +1,11 @@
 <mat-sidenav-container class="app-container">
   <mat-sidenav mode="side" opened class="app-sidenav">
     <mat-nav-list>
-      <view-main-menu-item
+      <data-chat-menu-item
         label="Nachrichten"
         link="/messages"
         icon="message"
-        [badge]="openMessageCount"
+        room="common"
       />
       <view-main-menu-group label="Filter">
         <view-main-menu-item label="Zimmer" link="/filter/rooms" icon="meeting_room" />

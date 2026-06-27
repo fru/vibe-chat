@@ -4,10 +4,11 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
 import { ViewMainMenuItem } from './components-layout/view-main-menu-item';
 import { ViewMainMenuGroup } from './components-layout/view-main-menu-group';
-import { MatListModule } from '@angular/material/list';
 import { ViewToolbar } from './components-layout/view-toolbar';
+import { DataChatMenuItem } from './components-chat/data-chat-menu-item';
 
 @Component({
   selector: 'app-root',
@@ -20,11 +21,10 @@ import { ViewToolbar } from './components-layout/view-toolbar';
     MatListModule,
     ViewMainMenuItem,
     ViewMainMenuGroup,
-    ViewToolbar
+    ViewToolbar,
+    DataChatMenuItem,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App {
-  protected readonly openMessageCount = 3;
-}
+export class App {}

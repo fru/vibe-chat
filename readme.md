@@ -21,3 +21,8 @@ npx cap add ios
 
 winget install --id Microsoft.OpenJDK.21 --source winget --accept-package-agreements --accept-source-agreements
 winget install -e --id Google.AndroidStudio
+
+
+## Repeated Agent Todos
+
+TODO remove unnecessary comments, especially stop the habit of commenting in the history of you code changes
