@@ -67,19 +67,19 @@ services:
       - database
 
   watchtower:
-    image: containrrr/watchtower
+    image: containrrr/watchtower:latest
     container_name: watchtower
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - WATCHTOWER_HTTP_API=true
-      - WATCHTOWER_API_TOKEN=YourStrong@WatchtowerPassword123!
+      - WATCHTOWER_HTTP_API_TOKEN=YourStrong@WatchtowerPassword123!
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_LABEL_ENABLE=true
+      - DOCKER_API_VERSION=1.41
     expose:
       - "8080"
-    command: --interval 300 --cleanup
+    command: --interval 300 --cleanup --http-api-update
 
 volumes:
   mssql_data:
