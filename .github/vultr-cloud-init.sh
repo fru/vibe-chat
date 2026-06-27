@@ -7,8 +7,7 @@
 # Add this script under cloud init
 
 # Cloudflare add ip to dns type A with name vibezen
-# Database UI: https://vibezen.rueberg.eu/db/
-# - Login: admin / admin (change password after first login)
+# Database UI: https://db.rueberg.eu/
 # - Add a connection: Host: database Port: 1433 Database: DemoDb User: sa Password: (see below)
 
 # 1. Install host nginx (reverse proxy that never restarts during deploys)
@@ -53,14 +52,24 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+}
 
-    # Proxy SQLPad (web-based DB management UI)
-    location /db/ {
+server {
+    listen 80;
+    server_name db.rueberg.eu;
+
+    location / {
         proxy_pass http://127.0.0.1:8083;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        # SQLpad uses WebSockets for live query result updates
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 300s;
     }
 }
 NGINXEOF
@@ -91,7 +100,7 @@ services:
       - backend
 
   database:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/mssql/server:2019-latest
     container_name: sql_server
     restart: always
     environment:
@@ -138,7 +147,6 @@ services:
     ports:
       - "8083:3000"
     environment:
-      - SQLPAD_BASE_URL=/db
       - SQLPAD_ADMIN=admin
       - SQLPAD_ADMIN_PASSWORD=YourStrong@SqlpadPassword123!
       - SQLPAD_APP_LOG_LEVEL=info

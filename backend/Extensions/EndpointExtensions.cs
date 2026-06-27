@@ -45,7 +45,14 @@ public static class EndpointExtensions
         app.MapPost("/api/rooms/{room}/messages", async (IMessageService messageService, string room, SendMessageRequest request) =>
         {
             var message = await messageService.SendMessageAsync(room, request.Username, request.Content);
-            return Results.Created($"/api/rooms/{room}/messages/{message.Id}", message);
+            var dto = new ChatMessageDto(
+                message.Id,
+                message.RoomId,
+                message.Username,
+                message.Content,
+                message.Timestamp,
+                message.ReceivedAll);
+            return Results.Created($"/api/rooms/{room}/messages/{message.Id}", dto);
         });
 
         return app;
@@ -53,3 +60,5 @@ public static class EndpointExtensions
 }
 
 public record SendMessageRequest(string Username, string Content);
+
+public record ChatMessageDto(Guid Id, int RoomId, string Username, string Content, DateTime Timestamp, bool ReceivedAll);
