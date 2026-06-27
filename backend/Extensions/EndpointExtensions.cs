@@ -1,6 +1,9 @@
 using App.Data;
 using App.Data.Entities;
+using App.Hubs;
 using App.Services;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using System.Runtime.InteropServices;
 
 namespace App.Extensions;
@@ -42,7 +45,12 @@ public static class EndpointExtensions
         });
 
         // POST a new chat message to a room
-        app.MapPost("/api/rooms/{room}/messages", async (IMessageService messageService, string room, SendMessageRequest request) =>
+        app.MapPost("/api/rooms/{room}/messages", async (
+            IMessageService messageService,
+            IHubContext<ChatHub> hubContext,
+            ChatDbContext db,
+            string room,
+            SendMessageRequest request) =>
         {
             var message = await messageService.SendMessageAsync(room, request.Username, request.Content);
             var dto = new ChatMessageDto(
@@ -50,9 +58,32 @@ public static class EndpointExtensions
                 message.RoomId,
                 message.Username,
                 message.Content,
-                message.Timestamp,
-                message.ReceivedAll);
+                message.Timestamp);
+
+            // Notify every member of this room with refreshed unread counts.
+            var memberNames = await db.ChatRoomUsers
+                .Where(u => u.Room.RoomName == room)
+                .Select(u => u.Username)
+                .ToListAsync();
+
+            foreach (var member in memberNames)
+            {
+                await ChatHub.NotifyUserCountsAsync(hubContext, messageService, member);
+            }
+
             return Results.Created($"/api/rooms/{room}/messages/{message.Id}", dto);
+        });
+
+        // POST mark a room as read for a user (called after loading messages)
+        app.MapPost("/api/rooms/{room}/read", async (
+            IMessageService messageService,
+            IHubContext<ChatHub> hubContext,
+            string room,
+            MarkReadRequest request) =>
+        {
+            await messageService.MarkRoomAsReadAsync(room, request.Username);
+            await ChatHub.NotifyUserCountsAsync(hubContext, messageService, request.Username);
+            return Results.Ok(new { status = "read" });
         });
 
         return app;
@@ -61,4 +92,6 @@ public static class EndpointExtensions
 
 public record SendMessageRequest(string Username, string Content);
 
-public record ChatMessageDto(Guid Id, int RoomId, string Username, string Content, DateTime Timestamp, bool ReceivedAll);
+public record MarkReadRequest(string Username);
+
+public record ChatMessageDto(Guid Id, int RoomId, string Username, string Content, DateTime Timestamp);

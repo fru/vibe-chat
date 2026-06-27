@@ -8,7 +8,6 @@ export interface ChatMessageDto {
   username: string;
   content: string;
   timestamp: string;
-  receivedAll: boolean;
 }
 
 export interface SendMessageDto {
@@ -33,5 +32,9 @@ export class ChatApiService {
       `${this.baseUrl}/${room}/messages`,
       body,
     );
+  }
+
+  markAsRead(room: string, username: string): Observable<unknown> {
+    return this.http.post(`${this.baseUrl}/${room}/read`, { username });
   }
 }

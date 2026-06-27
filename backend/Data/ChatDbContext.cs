@@ -10,7 +10,6 @@ public class ChatDbContext : DbContext
     public DbSet<ChatRoom> ChatRooms => Set<ChatRoom>();
     public DbSet<ChatRoomUser> ChatRoomUsers => Set<ChatRoomUser>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
-    public DbSet<ChatMessageNotified> ChatMessageNotified => Set<ChatMessageNotified>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,20 +42,6 @@ public class ChatDbContext : DbContext
             entity.Property(m => m.Content).HasMaxLength(int.MaxValue).IsRequired();
             entity.Property(m => m.Timestamp).HasDefaultValueSql("GETUTCDATE()");
             entity.HasIndex(m => new { m.RoomId, m.Timestamp });
-        });
-
-        modelBuilder.Entity<ChatMessageNotified>(entity =>
-        {
-            entity.HasKey(n => n.Id);
-            entity.HasOne(n => n.Message)
-                .WithMany(m => m.Notifications)
-                .HasForeignKey(n => n.MessageId)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(n => n.User)
-                .WithMany(u => u.Notifications)
-                .HasForeignKey(n => n.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-            entity.Property(n => n.Method).HasConversion<string>().HasMaxLength(20).IsRequired(false);
         });
 
         // Seed: "common" room with demo users A..E

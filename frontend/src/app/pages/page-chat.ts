@@ -1,5 +1,6 @@
 import {
   Component,
+  OnDestroy,
   effect,
   inject,
   signal,
@@ -14,6 +15,7 @@ import {
   ChatApiService,
   type ChatMessageDto,
 } from '../services/chat-api';
+import { ChatHubService } from '../services/chat-hub';
 
 interface ChatMessage {
   id: string;
@@ -53,11 +55,12 @@ interface ChatMessage {
     `,
   ],
 })
-export class PageChatComponent {
+export class PageChatComponent implements OnDestroy {
   private readonly chat = viewChild(ViewChat);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly api = inject(ChatApiService);
+  private readonly hub = inject(ChatHubService);
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly room = signal('common');
@@ -65,6 +68,10 @@ export class PageChatComponent {
 
   protected readonly messages = signal<ChatMessage[]>([]);
   protected readonly draft = signal('');
+
+  /** Last unread count seen for the current room, used to detect changes. */
+  private lastCount = -1;
+  private unsubscribeHub?: () => void;
 
   constructor() {
     // Ensure default query params (room, user) are present in the URL.
@@ -101,9 +108,24 @@ export class PageChatComponent {
       this.room.set(newRoom);
       this.user.set(newUser);
       if (changed) {
+        this.lastCount = -1;
+        this.ensureHubConnected();
         this.loadMessages();
       }
     });
+
+    // Subscribe to unread-count updates from the hub. When the count for the
+    // currently-viewed room changes, re-fetch the messages.
+    this.unsubscribeHub = this.hub.onCounts((counts) => {
+      const currentRoom = this.room();
+      const next = counts[currentRoom] ?? 0;
+      if (next !== this.lastCount) {
+        this.lastCount = next;
+        this.loadMessages();
+      }
+    });
+
+    this.ensureHubConnected();
 
     // Initial load.
     this.loadMessages();
@@ -114,6 +136,10 @@ export class PageChatComponent {
     });
   }
 
+  private ensureHubConnected(): void {
+    this.hub.connect(this.user());
+  }
+
   private loadMessages(): void {
     const room = this.room();
     const currentUser = this.user();
@@ -122,6 +148,8 @@ export class PageChatComponent {
         this.messages.set(
           dtos.map((dto) => this.toChatMessage(dto, currentUser)),
         );
+        // Mark the room as read now that the user has the latest messages.
+        this.api.markAsRead(room, currentUser).subscribe();
       },
       error: () => {
         this.snackBar.open(
@@ -189,5 +217,9 @@ export class PageChatComponent {
 
   protected formatTime(date: Date): string {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribeHub?.();
   }
 }

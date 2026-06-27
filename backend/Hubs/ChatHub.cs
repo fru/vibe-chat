@@ -5,27 +5,51 @@ namespace App.Hubs;
 
 public class ChatHub : Hub
 {
-    // Notification logic disabled while synchronise logic is being built.
-    // private readonly IDeliveryTracker _deliveryTracker;
-    //
-    // public ChatHub(IDeliveryTracker deliveryTracker)
-    // {
-    //     _deliveryTracker = deliveryTracker;
-    // }
+    private readonly IMessageService _messageService;
+
+    public ChatHub(IMessageService messageService)
+    {
+        _messageService = messageService;
+    }
 
     public override async Task OnConnectedAsync()
     {
-        var userId = Context.GetHttpContext()?.Request.Query["userId"];
+        var userId = Context.GetHttpContext()?.Request.Query["userId"].ToString();
         if (!string.IsNullOrEmpty(userId))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"User_{userId}");
+            // Push the initial set of unread counts to the freshly connected client.
+            await SendCountsToUserAsync(userId);
         }
         await base.OnConnectedAsync();
     }
 
-    // public async Task AcknowledgeReceipt(int messageId)
-    // {
-    //     _deliveryTracker.Complete(messageId);
-    //     await Clients.Caller.SendAsync("AckReceived", messageId);
-    // }
+    /// <summary>
+    /// Client can request a fresh count snapshot at any time.
+    /// </summary>
+    public async Task RequestCounts(string userId)
+    {
+        await SendCountsToUserAsync(userId);
+    }
+
+    /// <summary>
+    /// Broadcasts the current per-room unread counts to a single user.
+    /// </summary>
+    public async Task SendCountsToUserAsync(string userId)
+    {
+        var counts = await _messageService.GetUnreadCountsForUserAsync(userId);
+        await Clients.Group($"User_{userId}")
+            .SendAsync("MessageCounts", counts);
+    }
+
+    /// <summary>
+    /// Broadcasts counts to a user from outside the hub (e.g. after a message is posted
+    /// or a room is marked as read).
+    /// </summary>
+    public static async Task NotifyUserCountsAsync(IHubContext<ChatHub> hubContext, IMessageService messageService, string userId)
+    {
+        var counts = await messageService.GetUnreadCountsForUserAsync(userId);
+        await hubContext.Clients.Group($"User_{userId}")
+            .SendAsync("MessageCounts", counts);
+    }
 }
