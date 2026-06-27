@@ -7,17 +7,83 @@
 # Add this script under cloud init
 
 # Cloudflare add ip to dns type A with name vibezen
-# Database: http://95.179.161.146:8080/?mssql=database&username=sa&db=DemoDb
+# Database: https://vibezen.rueberg.eu/db/ first-launch setup:
+# - Set admin password on first launch
+# - Add a connection: Host: database Port: 1433 Database: DemoDb User: sa Password: (see below)
 
-# 1. Create the workspace directory
+# 1. Install host nginx (reverse proxy that never restarts during deploys)
+apt-get update && apt-get install -y nginx
+
+# 2. Write host nginx config - single entry point on port 80
+# Proxies to containers by host port. Host nginx stays up during container restarts.
+cat << 'NGINXEOF' > /etc/nginx/sites-available/vibezen
+server {
+    listen 80;
+    server_name _;
+
+    # Serve static Angular files from the frontend container
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy API calls to the backend container
+    location /api/ {
+        proxy_pass http://127.0.0.1:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy Watchtower HTTP API (triggered by GitHub Actions after image push)
+    location /redeploy/ {
+        proxy_pass http://127.0.0.1:8082/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Proxy CloudBeaver (web-based DB management UI)
+    location /db/ {
+        proxy_pass http://127.0.0.1:8083/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+NGINXEOF
+
+ln -sf /etc/nginx/sites-available/vibezen /etc/nginx/sites-enabled/vibezen
+rm -f /etc/nginx/sites-enabled/default
+systemctl enable nginx
+systemctl restart nginx
+
+# 3. Create the workspace directory
 mkdir -p /app
 cd /app
 
-# 2. Generate your docker-compose file with Adminer included
+# 4. Generate your docker-compose file
 cat << 'EOF' > docker-compose.yml
 version: '3.8'
 
 services:
+  frontend:
+    image: fru0/vibezen-frontend:latest
+    container_name: angular_frontend
+    restart: always
+    ports:
+      - "8080:8080"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    depends_on:
+      - backend
+
   database:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sql_server
@@ -34,35 +100,13 @@ services:
     image: fru0/vibezen-api:latest
     container_name: csharp_backend
     restart: always
-    expose:
-      - "8080"
+    ports:
+      - "8081:8080"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=database;Database=DemoDb;User Id=sa;Password=YourStrong@CloudPassword123!;TrustServerCertificate=True;
-    depends_on:
-      - database
-
-  frontend:
-    image: fru0/vibezen-frontend:latest
-    container_name: angular_frontend
-    restart: always
-    ports:
-      - "80:80"
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-    depends_on:
-      - backend
-
-  adminer:
-    image: adminer:latest
-    container_name: mssql_web_ui
-    restart: always
-    ports:
-      - "8080:8080" # Maps public port 8080 to the Web Manager
-    environment:
-      - ADMINER_DEFAULT_SERVER=database
     depends_on:
       - database
 
@@ -77,13 +121,25 @@ services:
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_LABEL_ENABLE=true
       - DOCKER_API_VERSION=1.41
-    expose:
-      - "8080"
+    ports:
+      - "8082:8080"
     command: --interval 300 --cleanup --http-api-update
+
+  cloudbeaver:
+    image: dbeaver/cloudbeaver:latest
+    container_name: cloudbeaver
+    restart: always
+    ports:
+      - "8083:8978"
+    volumes:
+      - cloudbeaver_data:/opt/cloudbeaver/workspace
+    depends_on:
+      - database
 
 volumes:
   mssql_data:
+  cloudbeaver_data:
 EOF
 
-# 3. Launch the containers
+# 5. Launch the containers
 docker compose up -d
