@@ -5,9 +5,13 @@ import { PageWorkflowComponent } from './pages/page-workflow';
 
 export const routes: Routes = [
   {
-    path: 'messages',
+    path: 'messages/:room',
     component: PageChatComponent,
     title: 'Nachrichten',
+  },
+  {
+    path: 'messages',
+    redirectTo: 'messages/common',
   },
   {
     path: 'filter/rooms',

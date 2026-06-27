@@ -23,6 +23,6 @@ winget install --id Microsoft.OpenJDK.21 --source winget --accept-package-agreem
 winget install -e --id Google.AndroidStudio
 
 
-## Repeated Agent Todos
+## Persistent Agent Todos
 
 TODO remove unnecessary comments, especially stop the habit of commenting in the history of you code changes
