@@ -1,6 +1,7 @@
 using App.Data;
 using App.Data.Entities;
 using App.Services;
+using System.Runtime.InteropServices;
 
 namespace App.Extensions;
 
@@ -9,6 +10,14 @@ public static class EndpointExtensions
     public static WebApplication MapChatEndpoints(this WebApplication app)
     {
         app.MapGet("/", () => "C# Web API is running smoothly!");
+
+        // GET version metadata baked into the image at build time
+        app.MapGet("/api/version.json", () => Results.Ok(new
+        {
+            version = Environment.GetEnvironmentVariable("APP_VERSION") ?? "dev",
+            commitSha = Environment.GetEnvironmentVariable("APP_COMMIT_SHA") ?? "local",
+            runtime = RuntimeInformation.FrameworkDescription
+        }));
 
         app.MapGet("/test-db", async (ChatDbContext db) =>
         {

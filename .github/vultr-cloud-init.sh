@@ -36,6 +36,8 @@ services:
     restart: always
     expose:
       - "8080"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Server=database;Database=DemoDb;User Id=sa;Password=YourStrong@CloudPassword123!;TrustServerCertificate=True;
@@ -48,6 +50,8 @@ services:
     restart: always
     ports:
       - "80:80"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     depends_on:
       - backend
 
@@ -68,7 +72,14 @@ services:
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 300 --cleanup csharp_backend angular_frontend
+    environment:
+      - WATCHTOWER_HTTP_API=true
+      - WATCHTOWER_API_TOKEN=YourStrong@WatchtowerPassword123!
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_LABEL_ENABLE=true
+    expose:
+      - "8080"
+    command: --interval 300 --cleanup
 
 volumes:
   mssql_data:

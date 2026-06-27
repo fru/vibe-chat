@@ -12,6 +12,11 @@ RUN dotnet publish "App.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 2: Serve application using lightweight runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+
+ARG VERSION=dev
+ARG COMMIT_SHA=local
+ENV APP_VERSION=$VERSION
+ENV APP_COMMIT_SHA=$COMMIT_SHA
 WORKDIR /app
 COPY --from=build /app/publish .
 
