@@ -66,7 +66,7 @@ public class MessagesController : ControllerBase
 }
 
 [ApiController]
-[Route("api/rooms/{room}/[action]")]
+[Route("api/rooms/{room}/read")]
 public class ReadController : ControllerBase
 {
     private readonly MessageService _messageService;

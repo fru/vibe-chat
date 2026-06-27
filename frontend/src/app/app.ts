@@ -4,10 +4,10 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { ViewMainMenuItem } from './view-layout/view-main-menu-item';
-import { ViewMainMenuGroup } from './view-layout/view-main-menu-group';
+import { ViewMainMenuItem } from './components-layout/view-main-menu-item';
+import { ViewMainMenuGroup } from './components-layout/view-main-menu-group';
 import { MatListModule } from '@angular/material/list';
-import { ViewToolbar } from './view-layout/view-toolbar';
+import { ViewToolbar } from './components-layout/view-toolbar';
 
 @Component({
   selector: 'app-root',

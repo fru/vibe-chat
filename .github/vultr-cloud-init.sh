@@ -7,8 +7,8 @@
 # Add this script under cloud init
 
 # Cloudflare add ip to dns type A with name vibezen
-# Database UI: https://db.rueberg.eu/
-# - Add a connection: Host: database Port: 1433 Database: DemoDb User: sa Password: (see below)
+# Database UI: https://vibezen.rueberg.eu/db/
+# - Login: System: MS SQL Server: database User: sa Password: (see below) Database: DemoDb
 
 # 1. Install host nginx (reverse proxy that never restarts during deploys)
 apt-get update && apt-get install -y nginx
@@ -57,24 +57,14 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
-}
 
-server {
-    listen 80;
-    server_name db.rueberg.eu;
-
-    location / {
-        proxy_pass http://127.0.0.1:8083;
+    # Proxy Adminer (Database Web UI) - served under /db/
+    location /db/ {
+        proxy_pass http://127.0.0.1:8083/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-
-        # SQLpad uses WebSockets for live query result updates
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_read_timeout 300s;
     }
 }
 NGINXEOF
@@ -145,25 +135,20 @@ services:
       - "8082:8080"
     command: --interval 300 --cleanup --http-api-update
 
-  sqlpad:
-    image: sqlpad/sqlpad:latest
-    container_name: sqlpad
+  adminer:
+    image: adminer:latest
+    container_name: mssql_web_ui
     restart: always
     ports:
-      - "8083:3000"
+      - "8083:8080" # Maps public port 8083 to the Web Manager
     environment:
-      - SQLPAD_ADMIN=admin
-      - SQLPAD_ADMIN_PASSWORD=YourStrong@SqlpadPassword123!
-      - SQLPAD_APP_LOG_LEVEL=info
-      - SQLPAD_WEB_LOG_LEVEL=warn
-    volumes:
-      - sqlpad_data:/var/lib/sqlpad
+      - ADMINER_DEFAULT_SERVER=database
+      - ADMINER_DESIGN=pepa-linha
     depends_on:
       - database
 
 volumes:
   mssql_data:
-  sqlpad_data:
 EOF
 
 # 5. Launch the containers

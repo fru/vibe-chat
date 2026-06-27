@@ -8,9 +8,9 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ViewChat } from '../view-chat/view-chat';
-import { ViewChatBubble } from '../view-chat/view-chat-bubble';
-import { ViewChatInput } from '../view-chat/view-chat-input';
+import { ViewChat } from '../components-chat/view-chat';
+import { ViewChatBubble } from '../components-chat/view-chat-bubble';
+import { ViewChatInput } from '../components-chat/view-chat-input';
 import {
   ChatApiService,
   type ChatMessageDto,
