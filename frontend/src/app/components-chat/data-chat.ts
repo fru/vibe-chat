@@ -82,21 +82,22 @@ export class DataChat implements OnDestroy {
   protected readonly draft = signal('');
 
   /**
-   * Whether the window is currently "active" — visible and focused.
+   * Whether the page is currently visible to the user.
    * `markAsRead` is only fired while this is true so background tabs
    * don't clear unread counts the user hasn't actually seen.
    */
-  private readonly windowActive = signal(this.isWindowActive());
+  private readonly windowActive = signal(
+    document.visibilityState === 'visible',
+  );
 
   private readonly visibilityHandler = (): void => {
-    const active = this.isWindowActive();
-    if (active && !this.windowActive()) {
-      // User just returned to the window — mark the current room as read
-      // if messages are already loaded.
-      this.windowActive.set(true);
+    const active = document.visibilityState === 'visible';
+    const wasActive = this.windowActive();
+    this.windowActive.set(active);
+    // User just returned to the tab — mark the current room as read
+    // if messages are already loaded.
+    if (active && !wasActive) {
       this.markCurrentRoomRead();
-    } else {
-      this.windowActive.set(active);
     }
   };
 
@@ -128,20 +129,12 @@ export class DataChat implements OnDestroy {
       onCleanup(() => unsubscribe());
     });
 
-    // Track window visibility/focus so we only mark as read when active.
-    window.addEventListener('visibilitychange', this.visibilityHandler);
-    window.addEventListener('focus', this.visibilityHandler);
-    window.addEventListener('blur', this.visibilityHandler);
+    // Track page visibility so we only mark as read when the tab is visible.
+    document.addEventListener('visibilitychange', this.visibilityHandler);
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('visibilitychange', this.visibilityHandler);
-    window.removeEventListener('focus', this.visibilityHandler);
-    window.removeEventListener('blur', this.visibilityHandler);
-  }
-
-  private isWindowActive(): boolean {
-    return !document.hidden && document.hasFocus();
+    document.removeEventListener('visibilitychange', this.visibilityHandler);
   }
 
   /** Marks the current room as read, but only if the window is active. */
