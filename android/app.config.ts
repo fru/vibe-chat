@@ -40,23 +40,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     output: 'static',
     favicon: './assets/favicon.png',
   },
-  plugins: [
-    [
-      'react-native-wonderpush',
-      {
-        // Replace with real keys before building. See README.md.
-        clientId: process.env.WONDERPUSH_CLIENT_ID ?? 'YOUR_CLIENT_ID',
-        clientSecret:
-          process.env.WONDERPUSH_CLIENT_SECRET ?? 'YOUR_CLIENT_SECRET',
-      },
-    ],
-  ],
+  plugins: [],
   extra: {
     eas: {
-      projectId: 'vibezen',
+      projectId: "5c4c0907-be67-446a-a7e3-6a335e2d2b36"
     },
     // Backend base URL. Override via app.config extra or .env for EAS.
     apiUrl: process.env.VIBEZEN_API_URL ?? 'http://10.0.2.2:5000',
     webAppUrl: process.env.VIBEZEN_WEB_URL ?? 'http://10.0.2.2:4200',
+    // WonderPush credentials (EU GDPR-compliant push provider).
+    // The react-native-wonderpush package ships no Expo config plugin, so
+    // credentials are passed at runtime via WonderPushService.init() rather
+    // than through the plugins array. Replace with real keys before building.
+    WONDERPUSH_CLIENT_ID: process.env.WONDERPUSH_CLIENT_ID ?? 'YOUR_CLIENT_ID',
+    WONDERPUSH_CLIENT_SECRET:
+      process.env.WONDERPUSH_CLIENT_SECRET ?? 'YOUR_CLIENT_SECRET',
   },
 });
