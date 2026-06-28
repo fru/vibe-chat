@@ -12,6 +12,7 @@ import { MatBadgeModule } from '@angular/material/badge';
       mat-list-item
       [routerLink]="link()"
       routerLinkActive="view-main-menu-item-active"
+      queryParamsHandling="preserve"
     >
       <mat-icon
         matListItemIcon
