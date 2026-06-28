@@ -17,7 +17,7 @@ import { ViewMainMenuItem } from '../components-layout/view-main-menu-item';
       [label]="label()"
       [link]="link()"
       [icon]="icon()"
-      [badge]="count()"
+      [badge]="count() || null"
     />
   `,
 })
