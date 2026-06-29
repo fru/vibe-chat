@@ -45,3 +45,4 @@ example
 # Firebase / FCM credentials (contains API key)
 google-services.json
 credentials.json
+credentials/
