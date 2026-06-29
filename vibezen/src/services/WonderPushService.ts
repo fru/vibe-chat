@@ -12,9 +12,12 @@ import Constants from 'expo-constants';
  */
 interface WonderPushNative {
   initialize(clientId: string, clientSecret: string): Promise<void>;
-  setUserId(userId: string): Promise<void>;
   disableGeolocation(): Promise<void>;
   subscribeToNotifications(fallbackToSettings?: boolean): Promise<void>;
+  isSubscribedToNotifications(): Promise<boolean>;
+  getInstallationId(): Promise<string>;
+  getDeviceId(): Promise<string>;
+  getPushToken(): Promise<string>;
   setDelegate(delegate: {
     onNotificationReceived?: (notification: unknown) => void;
     onNotificationOpened?: (notification: unknown, buttonIndex?: number) => void;
@@ -53,6 +56,30 @@ class WonderPushService {
       // / iOS notification authorization). initialize() alone does not prompt.
       await this.native.subscribeToNotifications();
       console.log('[WonderPush] subscribeToNotifications done');
+
+      // Diagnostic: report the real registration state so we can tell whether
+      // the device actually reached WonderPush servers (the dashboard is the
+      // source of truth — the JS calls above resolve even when registration
+      // silently fails, e.g. missing FCM configuration).
+      try {
+        const subscribed =
+          await this.native.isSubscribedToNotifications();
+        const installationId = await this.native.getInstallationId();
+        const deviceId = await this.native.getDeviceId();
+        const pushToken = await this.native.getPushToken();
+        console.log('[WonderPush] registration state', {
+          subscribed,
+          installationId,
+          deviceId,
+          pushToken,
+        });
+      } catch (diagErr) {
+        console.warn(
+          '[WonderPush] failed to read registration state',
+          diagErr,
+        );
+      }
+
       this.initialized = true;
     } catch (err) {
       // Native module unavailable — push notifications disabled, app continues.
@@ -63,13 +90,6 @@ class WonderPushService {
     }
   }
 
-  async setUserId(userId: string): Promise<void> {
-    try {
-      await this.native?.setUserId(userId);
-    } catch {
-      // ignore — best effort
-    }
-  }
 }
 
 export const wonderPush = new WonderPushService();

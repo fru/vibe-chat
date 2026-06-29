@@ -21,6 +21,7 @@
     "react-native-screens": "4.25.2",
     "react-native-web": "~0.21.0",
     "react-native-wonderpush": "^3.0.1",
+    "react-native-wonderpush-fcm": "^2.0.0",
     "react-native-worklets": "0.8.3"
   },
   "devDependencies": {
