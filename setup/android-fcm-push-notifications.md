@@ -1,5 +1,7 @@
 # Steps to wire up the firebase fcm push notifications
 
+1. Install eas: npm install -g eas-cli
+
 ## Download `google-services.json` from firebase
 
 1. Open your link: https://console.firebase.google.com/project/vibezen-android/settings/cloudmessaging
@@ -16,7 +18,6 @@
 8. Put into GOOGLE_SERVICES_JSON Github Action Secret (Plain Text Json)
 9. Path needs to be referenced by vibezen/app.json via `expo.googleServicesFile` 
 
-
 ## Download FCM Server credentials (e.g. vibezen-android-d56e89d88077.json)
 
 1. In the Firebase Console → your project → Project settings → Cloud Messaging → Manage service account permissions
@@ -29,11 +30,17 @@
 6. After creating it, on the service account row, click ⋯ → Manage keys.
 7. Add key → Create new key → JSON → Create.
 8. A .json file downloads — this is what you upload to Expo via eas credentials (Android → FCM v1 service account key).
+9. Place file into root of app but dont commit it
 
 ## Upload FCM Server credentials (e.g. vibezen-android-d56e89d88077.json) to expo
 
-
-
+1. In app root call `eas credentials`
+2. Select: Android
+3. Select: development
+4. Select: Google Service Account
+5. Select: Manage you Google Service Account for Push Notifcations (FCm V1)
+6. Select: Set up a Google Service Account for Push Notifcations (FCm V1)
+7. Select: json file should be found - use that file
 
 ## Test Push Notifcations from Expo
 
