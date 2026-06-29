@@ -3,13 +3,13 @@ import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
 import AppTabs from '@/components/app-tabs';
-import { wonderPush } from '@/services/WonderPushService';
+import { notifications } from '@/services/NotificationService';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   useEffect(() => {
-    wonderPush.init();
+    notifications.init();
   }, []);
 
   return (

@@ -38,6 +38,13 @@
             "imageWidth": 76
           }
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#208AEF",
+          "defaultChannel": "default"
+        }
       ]
     ],
     "experiments": {
@@ -48,9 +55,7 @@
       "router": {},
       "eas": {
         "projectId": "46c00ef4-a5a6-4120-a015-fb1a11bb25e0"
-      },
-      "wonderpushClientId": "e3a9c87e7dcb128d6352331699f09578a95bf1d7",
-      "wonderpushClientSecret": "309346e9ee84b22bff9a142601ec94d86043bbe654b511f7ce3bb7a2df8f8558"
+      }
     },
     "owner": "frus-organization"
   }
