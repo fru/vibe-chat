@@ -4,11 +4,11 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "vibezen/app.json"
-      - "vibezen/eas.json"
-      - "vibezen/package.json"
-      - "vibezen/package-lock.json"
-      - "vibezen/assets/**"
+      - "expo/app.json"
+      - "expo/eas.json"
+      - "expo/package.json"
+      - "expo/package-lock.json"
+      - "expo/assets/**"
       - ".github/workflows/deploy-expo.yml"
   workflow_dispatch:
 
@@ -25,11 +25,11 @@ jobs:
         with:
           node-version: 26
           cache: npm
-          cache-dependency-path: vibezen/package-lock.json
+          cache-dependency-path: expo/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: vibezen
+        working-directory: expo
 
       - name: Install EAS CLI
         run: npm install -g eas-cli
@@ -37,7 +37,7 @@ jobs:
       - name: Write google-services.json
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: echo "$GOOGLE_SERVICES_JSON" > vibezen/google-services.json
+        run: echo "$GOOGLE_SERVICES_JSON" > expo/google-services.json
 
       - name: Stage google-services.json for EAS Build
         # EAS Build only uploads git-tracked files AND respects .gitignore
@@ -47,13 +47,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          sed -i '/google-services.json/d' vibezen/.gitignore
-          git add vibezen/.gitignore vibezen/google-services.json
+          sed -i '/google-services.json/d' expo/.gitignore
+          git add expo/.gitignore expo/google-services.json
           git commit -m "local throw away commit: add google-services.json for EAS Build" --no-verify
 
       - name: Build (preview)
         run: eas build --profile preview --platform android --non-interactive
-        working-directory: vibezen
+        working-directory: expo
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -69,17 +69,17 @@ jobs:
         with:
           node-version: 26
           cache: npm
-          cache-dependency-path: vibezen/package-lock.json
+          cache-dependency-path: expo/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: vibezen
+        working-directory: expo
 
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
       - name: Build (preview)
         run: eas build --profile preview --platform ios --non-interactive
-        working-directory: vibezen
+        working-directory: expo
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
