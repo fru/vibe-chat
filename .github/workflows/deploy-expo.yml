@@ -39,6 +39,16 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: echo "$GOOGLE_SERVICES_JSON" > vibezen/google-services.json
 
+      - name: Stage google-services.json for EAS Build
+        # EAS Build only uploads git-tracked files. The file is gitignored
+        # locally, so we force-add it and commit it in a throwaway commit
+        # that is never pushed back to the repository.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f vibezen/google-services.json
+          git commit -m "local throw away commit: add google-services.json for EAS Build" --no-verify
+
       - name: Build (preview)
         run: eas build --profile preview --platform android --non-interactive
         working-directory: vibezen
