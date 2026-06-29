@@ -2,6 +2,7 @@ using App.Data;
 using App.Data.Entities;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace App.Services;
 
@@ -15,11 +16,19 @@ public class ChatService
 {
     private readonly ChatDbContext _db;
     private readonly IHubContext<ChatSignalRHub> _hubContext;
+    private readonly ExpoPushService _pushService;
+    private readonly ILogger<ChatService> _logger;
 
-    public ChatService(ChatDbContext db, IHubContext<ChatSignalRHub> hubContext)
+    public ChatService(
+        ChatDbContext db,
+        IHubContext<ChatSignalRHub> hubContext,
+        ExpoPushService pushService,
+        ILogger<ChatService> logger)
     {
         _db = db;
         _hubContext = hubContext;
+        _pushService = pushService;
+        _logger = logger;
     }
 
     public async Task<ChatMessage> SendMessageAsync(string roomName, string username, string content, Guid? clientId = null)
@@ -50,6 +59,20 @@ public class ChatService
         }
 
         await _db.SaveChangesAsync();
+
+        // Fire a push notification (dummy: always goes to a fixed test token).
+        // Awaiting is intentional for now so the dummy is easy to observe;
+        // failures are swallowed inside ExpoPushService so chat is never blocked.
+        try
+        {
+            await _pushService.SendTestNotificationAsync(
+                title: $"New message in {roomName}",
+                body: $"{username}: {content}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while sending Expo push notification.");
+        }
 
         return message;
     }

@@ -11,6 +11,7 @@ builder.Services.AddDbContext<ChatDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<ExpoPushService>();
 builder.Services.AddScoped<ChatService>();
 
 builder.Services.AddControllers();
