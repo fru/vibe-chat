@@ -45,11 +45,14 @@ jobs:
         # remove the ignore rule and commit the file in a throwaway commit
         # that is never pushed back to the repository.
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           sed -i '/google-services.json/d' expo/.gitignore
-          git add expo/.gitignore expo/google-services.json
-          git commit -m "local throw away commit: add google-services.json for EAS Build" --no-verify
+      # git config user.name "github-actions[bot]"
+      # git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+        
+        #  git add expo/.gitignore expo/google-services.json
+          
+        #git commit -m "local throw away commit: add google-services.json for EAS Build" --no-verify
 
       - name: Build (preview)
         run: eas build --profile preview --platform android --non-interactive
